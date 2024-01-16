@@ -6,6 +6,7 @@ import jakarta.annotation.PostConstruct
 import org.springframework.boot.context.event.ApplicationReadyEvent
 import org.springframework.context.ApplicationListener
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 
 import javax.sql.DataSource
 import java.nio.charset.StandardCharsets
@@ -58,30 +59,34 @@ class MigrationService implements ApplicationListener<ApplicationReadyEvent> {
         }
     }
 
+    @Transactional
     private void applyMigration(Path migration) {
-        String migrationFileName = migration.getFileName().toString()
-        log.debug("🔍 Checking migration file: $migrationFileName")
+        try {
+            String migrationFileName = migration.getFileName().toString()
+            log.debug("🔍 Checking migration file: $migrationFileName")
 
-        // Check if this migration has been executed
-        def result = sql.firstRow("SELECT COUNT(*) FROM migration_history WHERE migration_file = ?", [migrationFileName])?.get(0)
-        Integer count = result ? result.get(0) : 0
+            // Check if this migration has been executed
+            def result = sql.firstRow("SELECT COUNT(*) FROM migration_history WHERE migration_file = ?", [migrationFileName])?.get(0)
+            Integer count = result ? result.get(0) : 0
 
-        log.info("COUNT: " + count)
+            if (count == 0) {
+                log.info("🚀 Executing migration: $migrationFileName")
+                String sqlContent = Files.readString(migration, StandardCharsets.UTF_8)
+                sql.execute(sqlContent)
 
-        if (count == 0) {
-            log.info("🚀 Executing migration: $migrationFileName")
-            String sqlContent = Files.readString(migration, StandardCharsets.UTF_8)
-            sql.execute(sqlContent)
+                // Record the migration execution
+                sql.execute("""
+                    INSERT INTO migration_history (migration_file, executed_at)
+                    VALUES (?, ?)
+                """, [migrationFileName, new Timestamp(System.currentTimeMillis())])
 
-            // Record the migration execution
-            sql.execute("""
-                INSERT INTO migration_history (migration_file, executed_at)
-                VALUES (?, ?)
-            """, [migrationFileName, new Timestamp(System.currentTimeMillis())])
-
-            log.info("✅ Executed migration: $migrationFileName")
-        } else {
-            log.info("✅✅ Migration already applied: $migrationFileName")
+                log.info("✅ Executed migration: $migrationFileName")
+            } else {
+                log.info("✅✅ Migration already applied: $migrationFileName")
+            }
+        } catch (Exception e) {
+            log.error("️⚠️ Migration failed: " + migration.getFileName(), e)
+            throw new RuntimeException("⚠️ Migration failed: " + migration.getFileName(), e)
         }
     }
 }

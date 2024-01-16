@@ -1,11 +1,9 @@
 # migration-one
 
-Simple playground for hand rolled database migrations with Spring Boot
+Simple playground for hand rolled database migrations with Spring Boot and JPA.
 
 ## todo
 
-    - table creation
-    - validate the model (not in prod)
     - run scripts in transactions
 
 ## run
