@@ -6,6 +6,8 @@ Simple playground for hand rolled database migrations with Spring Boot and JPA.
 
     gradle bootRun
 
+    gradle test
+
 ## gradle dep updates
 
     .\gradlew dependencyUpdates -Drevision=release
