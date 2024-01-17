@@ -2,10 +2,6 @@
 
 Simple playground for hand rolled database migrations with Spring Boot and JPA.
 
-## todo
-
-    - run scripts in transactions
-
 ## run
 
     gradle bootRun
