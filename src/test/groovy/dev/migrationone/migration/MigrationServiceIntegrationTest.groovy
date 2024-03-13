@@ -10,6 +10,7 @@ import javax.sql.DataSource
 
 import static org.junit.jupiter.api.Assertions.assertEquals
 import static org.junit.jupiter.api.Assertions.assertTrue
+import static org.junit.jupiter.api.Assertions.assertFalse
 
 @SpringBootTest
 @ActiveProfiles('test')
@@ -76,5 +77,20 @@ class MigrationServiceIntegrationTest {
 
             assertTrue(count > 0, "Column $column does not exist in $tableName")
         }
+    }
+
+    @Test
+    void testIgnoredMigrationFileIsNotExecuted() {
+        Sql sql = new Sql(dataSource)
+        String ignoredFileName = "2024-03-13_ignored.sql"
+
+        int count = sql.firstRow("""
+            SELECT COUNT(*)
+            FROM migration_history
+            WHERE migration_file = ?
+        """, [ignoredFileName])[0] as int
+
+        // Assert that this file is not present in the migration history table
+        assertFalse(count > 0, "Ignored migration file $ignoredFileName should not be executed")
     }
 }

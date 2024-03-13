@@ -19,6 +19,7 @@ import java.sql.Timestamp
 @Service
 class MigrationService implements ApplicationListener<ApplicationReadyEvent> {
     public static final Path MIGRATIONS_PATH = Paths.get("src/main/resources/migrations")
+    public static final String IGNORE_SUFFIX = "_ignore.sql"
 
     private final Sql sql
 
@@ -28,7 +29,7 @@ class MigrationService implements ApplicationListener<ApplicationReadyEvent> {
 
     @PostConstruct
     void init() {
-        log.info("Initializing migration service")
+        log.info("🚀 Initializing migration service")
         // Create a table for tracking migrations if it doesn't exist
         sql.execute("""
             CREATE TABLE IF NOT EXISTS migration_history (
@@ -41,7 +42,7 @@ class MigrationService implements ApplicationListener<ApplicationReadyEvent> {
 
     @Override
     void onApplicationEvent(ApplicationReadyEvent event) {
-        log.info("Application ready. Checking and running migrations.")
+        log.info("🚀 Application ready. Checking and running migrations.")
         checkAndRunMigrations()
     }
 
@@ -50,7 +51,7 @@ class MigrationService implements ApplicationListener<ApplicationReadyEvent> {
 
         try {
             Files.walk(migrationsPath)
-                    .findAll { Path it -> it.toFile().isFile() && it.toFile().name.endsWith('.sql') }
+                    .findAll { Path it -> it.toFile().isFile() && it.toFile().name.endsWith('.sql') && !it.toFile().name.endsWith(IGNORE_SUFFIX) }
                     .sort { Path it -> it.toFile().name }
                     .each { Path it -> applyMigration(it) }
         } catch (IOException e) {
@@ -60,7 +61,7 @@ class MigrationService implements ApplicationListener<ApplicationReadyEvent> {
     }
 
     @Transactional
-    private void applyMigration(Path migration) {
+    void applyMigration(Path migration) {
         try {
             String migrationFileName = migration.getFileName().toString()
             log.debug("🔍 Checking migration file: $migrationFileName")
