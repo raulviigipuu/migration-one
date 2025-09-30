@@ -21,7 +21,7 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'org.apache.groovy:groovy:5.0.1'
 	implementation 'org.apache.groovy:groovy-sql:5.0.1'
-	runtimeOnly 'com.h2database:h2:2.3.232'
+	runtimeOnly 'com.h2database:h2:2.4.240'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.junit.jupiter:junit-jupiter-api:5.13.4'
 	testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.13.4'
